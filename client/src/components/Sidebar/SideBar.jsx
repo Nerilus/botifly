@@ -1,74 +1,85 @@
-import { Link } from 'react-router-dom'
 import React, { useState } from 'react';
-import { Icon, Divider } from '@tremor/react'
-import { LogoutIcon } from '@heroicons/react/outline'
-import getUserData  from '../../utils/user.constants'
-import { Bot, LayoutDashboard, LogOut, Sparkles, User2, UserSquare2, Users } from 'lucide-react';
-// import { LogoutIcon } from '@heroicons/react/outline'
+import './sidebar.css'
 
+const SideBar = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-
-const userData = getUserData()
-
-  const SideBar = () => {
-    const [selectedItem, setSelectedItem] = useState(null);
-
-    return (
-      <div className="sidebar">
-        <div className="container-box h-full flex flex-col justify-between">
-          <div className="sidebar-top">
-            <div className="sidebar-top__logo">
-              {/* <span>botifly</span> */}
-            </div>
-            <div className="sidebar-top__pages">
-            <ul>
-          <li>
-            <Link
-            >
-            <LayoutDashboard size={28} strokeWidth={1.25} />
-              <p className="size-18">Tableau de bord </p>
-            </Link>
-          </li>
-          <li>
-            <Link
-            >
-                <Sparkles size={28} strokeWidth={1.25} /> 
-                <p className="size-18">Nos Services </p>
-            </Link>
-            </li>
-            <li>
-            <Link
-            >
-            <Bot size={28} strokeWidth={1.25} />              
-            <p className="size-18">Your Bots</p>
-            </Link>
-          </li>
-          <li>
-            <Link
-            >
-              <Users size={28} strokeWidth={1.25} />
-              <p className="size-18">Utilisateurs</p>
-              </Link>
-          </li>
-      </ul>
-            </div>
-          </div>
-          <div className="sidebar__bottom">
-          <Divider />
-            <div className="user-container">
-              <ul type="button" className='btn'>
-                <li className="user-container__top">
-                <Icon icon={User2 } color="default" />
-                  <p className="size-18">{userData.username}</p>
-                  <LogoutIcon icon={User2 } color="default" />
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
-  
-  export default SideBar;
-  
+
+  const menuBtnChange = () => {
+    if (isSidebarOpen) {
+      return 'bx bx-menu-alt-right';
+    } else {
+      return 'bx bx-menu';
+    }
+  };
+  return (
+    <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <div className="logo-details">
+      <div className="logo_name">Botifly</div>
+      <i className={menuBtnChange()} id="btn" onClick={toggleSidebar}></i>
+    </div>
+      <ul className="nav-list">
+        <li>
+          <i className="bx bx-search"></i>
+          <div>
+            <input type="text" placeholder="Search..." />
+            <span className="tooltip">Search</span>
+          </div>
+        </li>
+        <li>
+          <a href="#">
+            <i className="bx bx-grid-alt"></i>
+            <span className="links_name">Dashboard</span>
+          </a>
+          <span className="tooltip">Dashboard</span>
+        </li>
+        <li>
+          <a href="#">
+            <i className="bx bx-pie-chart-alt-2"></i>
+            <span className="links_name">Nos Services</span>
+          </a>
+          <span className="tooltip">Nos Services</span>
+        </li>
+        <li>
+          <a href="#">
+          <i class='bx bx-bot'></i>
+            <span className="links_name">Your Bots</span>
+          </a>
+          <span className="tooltip">Your Bots</span>
+        </li>
+        <li>
+          <a href="#">
+          <i className="bx bx-user"></i>
+            <span className="links_name">Utilisateurs</span>
+          </a>
+          <span className="tooltip">Utilisateurs</span>
+        </li>
+        <li>
+          <a href="#">
+            <i className="bx bx-cog"></i>
+            <span className="links_name">Settings</span>
+          </a>
+          <span className="tooltip">Settings</span>
+        </li>
+        <li className="profile">
+          <div className="profile-details">
+            <img
+              src="https://drive.google.com/uc?export=view&id=1ETZYgPpWbbBtpJnhi42_IR3vOwSOpR4z"
+              alt="profileImg"
+            />
+            <div className="name_job">
+              <div className="name">Stella Army</div>
+              <div className="job">Web designer</div>
+            </div>
+          </div>
+          <i className="bx bx-log-out" id="log_out"></i>
+        </li>
+      </ul>
+    </div>
+  );
+};
+
+export default SideBar;
