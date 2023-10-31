@@ -1,58 +1,52 @@
-const { db } = require("../connect");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const User = require("../models/User")
+const { createError } = require ("../utils/error")
+const bcrypt = require ("bcryptjs");
+const jwt = require("jsonwebtoken")
 
-exports.register = (req, res) => {
-  // Votre logique d'inscription ici...
-  const q = "SELECT * FROM users WHERE username = ?";
+ 
+exports.register = async (req, res,next)=> {
+    try{
+        const salt = bcrypt.genSaltSync(10);
+        const hash = bcrypt.hashSync(req.body.password, salt);
 
-  db.query(q, [req.body.username], (err, data) => {
-      if(err) return res.status(500).json(err);
-      if (data.length) return res.status(409).json("User already exists");
-      //hash a new user
-      const salt = bcrypt.genSaltSync(10);
-      const hashedPassword = bcrypt.hashSync(req.body.password, salt);
-
-      const insertQuery = "INSERT INTO users (`username`, `email`, `password`, `name`) VALUES (?, ?, ?, ?)";
-      const values = [
-        req.body.username,
-        req.body.email,
-        hashedPassword,
-        req.body.name
-      ];
-
-      db.query(insertQuery, values, (err, data) => {
-        if (err) return res.status(500).json(err);
-        return res.status(200).json("User has been created");
-      });
-    });
+        const newUser = new User({
+            ...req.body,
+            password: hash,
+        });
+        await newUser.save();
+        res.status(200).send("User has been created.")
+        }catch (err){
+        next(err);
+    };
 };
 
-//login
-exports.login = (req, res) => {
-    const q = "SELECT * FROM users WHERE username = ?";
+exports.login = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ username: req.body.username });
+    if (!user) return next(createError(404, "User not found!"));
 
-  db.query(q, [req.body.username], (err, data) => {
-    if (err) return res.status(500).json(err);
-    if (data.length === 0) return res.status(404).json("User not found!");
-
-    const checkPassword = bcrypt.compareSync(
+    const isPasswordCorrect = await bcrypt.compare(
       req.body.password,
-      data[0].password
+      user.password
+    );
+    if (!isPasswordCorrect)
+      return next(createError(400, "Wrong password or username!"));
+
+    // Créez un jeton JWT en incluant le nom et l'adresse e-mail de l'utilisateur
+    const token = jwt.sign(
+      { id: user._id, username: user.username, email: user.email },
+      process.env.JWT, // Assurez-vous d'utiliser votre propre secret pour le JWT
+      { expiresIn: '1h' } // Optionnel : définissez une durée d'expiration pour le jeton
     );
 
-    if (!checkPassword)
-      return res.status(400).json("Wrong password or username!");
+    // Envoyez le jeton JWT dans le cookie ou dans le corps de la réponse, selon votre besoin
+    res.cookie("access_token", token, {
+      httpOnly: true,
+    });
 
-    const token = jwt.sign({ id: data[0].id }, "secretkey");
-
-    const { password, ...others } = data[0];
-
-    res
-      .cookie("accessToken", token, {
-        httpOnly: true,
-      })
-      .status(200)
-      .json(others);
-  });
+    // Renvoyez le jeton JWT et d'autres détails de l'utilisateur dans la réponse
+    res.status(200).json({ token, details: { username: user.username, email: user.email } });
+  } catch (err) {
+    next(err);
+  }
 };
